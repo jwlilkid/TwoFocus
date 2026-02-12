@@ -9,11 +9,65 @@ import { TaskModal } from './components/modals/TaskModal';
 import { HistoryModal } from './components/modals/HistoryModal';
 import { Plus, History } from 'lucide-react';
 
+// Migration helper defined outside component for cleaner initialization
+const migrateTask = (t: any): Task => {
+  let priority = typeof t.priority === 'number' ? t.priority : 5;
+  if (typeof t.priority === 'string') {
+     if (t.priority === 'High') priority = 9;
+     else if (t.priority === 'Medium') priority = 5;
+     else priority = 2;
+  }
+  
+  let difficultyLevel = typeof t.difficultyLevel === 'number' ? t.difficultyLevel : 5;
+  if (t.difficultyMinutes !== undefined) {
+     // Map old minutes to rough 1-10 scale
+     difficultyLevel = Math.min(10, Math.ceil((t.difficultyMinutes / 60) * 5));
+  }
+
+  return {
+    ...t,
+    priority,
+    difficultyLevel,
+    botheredLevel: t.botheredLevel ?? 5,
+  };
+};
+
 export default function App() {
-  // State
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [completedTasks, setCompletedTasks] = useState<Task[]>([]);
-  const [rankingMethod, setRankingMethod] = useState<RankingCriteria>(RankingCriteria.PRIORITY);
+  // State with Lazy Initialization
+  // This ensures data is loaded strictly BEFORE the first render, preventing any data loss.
+  
+  const [tasks, setTasks] = useState<Task[]>(() => {
+    try {
+      const stored = localStorage.getItem('memphis-tasks');
+      if (stored) {
+        return JSON.parse(stored).map(migrateTask);
+      }
+    } catch (e) {
+      console.error("Failed to load tasks", e);
+    }
+    return [];
+  });
+
+  const [completedTasks, setCompletedTasks] = useState<Task[]>(() => {
+    try {
+      const stored = localStorage.getItem('memphis-completed');
+      if (stored) {
+        return JSON.parse(stored).map(migrateTask);
+      }
+    } catch (e) {
+      console.error("Failed to load completed tasks", e);
+    }
+    return [];
+  });
+
+  const [rankingMethod, setRankingMethod] = useState<RankingCriteria>(() => {
+    try {
+      const stored = localStorage.getItem('memphis-ranking');
+      if (stored) return stored as RankingCriteria;
+    } catch (e) {}
+    return RankingCriteria.PRIORITY;
+  });
+
   const [activeCategory, setActiveCategory] = useState<string>('All');
   
   // Modal States
@@ -21,48 +75,7 @@ export default function App() {
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
 
-  // Persistence on Mount with Migration
-  useEffect(() => {
-    const storedTasks = localStorage.getItem('memphis-tasks');
-    const storedCompleted = localStorage.getItem('memphis-completed');
-    const storedRanking = localStorage.getItem('memphis-ranking');
-    
-    // Migration helper for old data format
-    const migrateTask = (t: any): Task => {
-      let priority = typeof t.priority === 'number' ? t.priority : 5;
-      if (typeof t.priority === 'string') {
-         if (t.priority === 'High') priority = 9;
-         else if (t.priority === 'Medium') priority = 5;
-         else priority = 2;
-      }
-      
-      let difficultyLevel = typeof t.difficultyLevel === 'number' ? t.difficultyLevel : 5;
-      if (t.difficultyMinutes !== undefined) {
-         // Map old minutes to rough 1-10 scale
-         difficultyLevel = Math.min(10, Math.ceil((t.difficultyMinutes / 60) * 5));
-      }
-
-      return {
-        ...t,
-        priority,
-        difficultyLevel,
-        // Ensure defaults for new fields if completely missing
-        botheredLevel: t.botheredLevel ?? 5,
-      };
-    };
-    
-    if (storedTasks) {
-       const parsed = JSON.parse(storedTasks);
-       setTasks(parsed.map(migrateTask));
-    }
-    if (storedCompleted) {
-       const parsed = JSON.parse(storedCompleted);
-       setCompletedTasks(parsed.map(migrateTask));
-    }
-    if (storedRanking) setRankingMethod(storedRanking as RankingCriteria);
-  }, []);
-
-  // Persistence on Update
+  // Persistence on Update (Only saves when data changes)
   useEffect(() => {
     localStorage.setItem('memphis-tasks', JSON.stringify(tasks));
   }, [tasks]);
@@ -174,15 +187,11 @@ export default function App() {
   };
 
   const handleDeleteTask = (id: string) => {
-    // Exactly like handleCompleteTask: find it, then remove it from tasks.
-    // We simply skip the step of adding it to 'completedTasks'.
-    // Removed window.confirm to ensure immediate execution like Cross Out.
     const taskToDelete = tasks.find(t => t.id === id);
     
     if (taskToDelete) {
         setTasks(prev => prev.filter(t => t.id !== id));
         
-        // If the task being deleted is the one currently being edited in the modal, close the modal
         if (editingTask && editingTask.id === id) {
             setIsTaskModalOpen(false);
             setEditingTask(null);
@@ -196,7 +205,6 @@ export default function App() {
   };
 
   const handleClearHistory = () => {
-      // Direct execution, no confirmation, mirroring the delete function behavior
       setCompletedTasks([]);
   };
 
