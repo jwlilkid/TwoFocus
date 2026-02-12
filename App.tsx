@@ -1,0 +1,323 @@
+import React, { useState, useEffect, useMemo } from 'react';
+import { v4 as uuidv4 } from 'uuid';
+import { Task, RankingCriteria } from './types';
+import { Button } from './components/ui/Button';
+import { CategoryFilter } from './components/CategoryFilter';
+import { RankingSelector } from './components/RankingSelector';
+import { TaskCard } from './components/TaskCard';
+import { TaskModal } from './components/modals/TaskModal';
+import { HistoryModal } from './components/modals/HistoryModal';
+import { Plus, History } from 'lucide-react';
+
+export default function App() {
+  // State
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [completedTasks, setCompletedTasks] = useState<Task[]>([]);
+  const [rankingMethod, setRankingMethod] = useState<RankingCriteria>(RankingCriteria.PRIORITY);
+  const [activeCategory, setActiveCategory] = useState<string>('All');
+  
+  // Modal States
+  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+
+  // Persistence on Mount with Migration
+  useEffect(() => {
+    const storedTasks = localStorage.getItem('memphis-tasks');
+    const storedCompleted = localStorage.getItem('memphis-completed');
+    const storedRanking = localStorage.getItem('memphis-ranking');
+    
+    // Migration helper for old data format
+    const migrateTask = (t: any): Task => {
+      let priority = typeof t.priority === 'number' ? t.priority : 5;
+      if (typeof t.priority === 'string') {
+         if (t.priority === 'High') priority = 9;
+         else if (t.priority === 'Medium') priority = 5;
+         else priority = 2;
+      }
+      
+      let difficultyLevel = typeof t.difficultyLevel === 'number' ? t.difficultyLevel : 5;
+      if (t.difficultyMinutes !== undefined) {
+         // Map old minutes to rough 1-10 scale
+         difficultyLevel = Math.min(10, Math.ceil((t.difficultyMinutes / 60) * 5));
+      }
+
+      return {
+        ...t,
+        priority,
+        difficultyLevel,
+        // Ensure defaults for new fields if completely missing
+        botheredLevel: t.botheredLevel ?? 5,
+      };
+    };
+    
+    if (storedTasks) {
+       const parsed = JSON.parse(storedTasks);
+       setTasks(parsed.map(migrateTask));
+    }
+    if (storedCompleted) {
+       const parsed = JSON.parse(storedCompleted);
+       setCompletedTasks(parsed.map(migrateTask));
+    }
+    if (storedRanking) setRankingMethod(storedRanking as RankingCriteria);
+  }, []);
+
+  // Persistence on Update
+  useEffect(() => {
+    localStorage.setItem('memphis-tasks', JSON.stringify(tasks));
+  }, [tasks]);
+
+  useEffect(() => {
+    localStorage.setItem('memphis-completed', JSON.stringify(completedTasks));
+  }, [completedTasks]);
+
+  useEffect(() => {
+    localStorage.setItem('memphis-ranking', rankingMethod);
+  }, [rankingMethod]);
+
+  // Derived Data
+  const categories = useMemo(() => {
+    const uniqueCats = new Set(tasks.map(t => t.category).filter(Boolean));
+    return Array.from(uniqueCats).sort();
+  }, [tasks]);
+
+  const sortedTasks = useMemo(() => {
+    let filtered = activeCategory === 'All' 
+      ? tasks 
+      : tasks.filter(t => t.category === activeCategory);
+
+    return [...filtered].sort((a, b) => {
+      switch (rankingMethod) {
+        case RankingCriteria.PRIORITY:
+          // High Priority Value (e.g. 10) first
+          if (b.priority !== a.priority) {
+            return b.priority - a.priority;
+          }
+          return b.createdAt - a.createdAt; 
+
+        case RankingCriteria.BOTHERED:
+          // Higher bothered level comes first
+          if (b.botheredLevel !== a.botheredLevel) {
+            return b.botheredLevel - a.botheredLevel;
+          }
+          return b.priority - a.priority;
+
+        case RankingCriteria.DIFFICULTY:
+          // Hardest first (Higher difficulty level)
+          if (b.difficultyLevel !== a.difficultyLevel) {
+            return b.difficultyLevel - a.difficultyLevel;
+          }
+          return b.priority - a.priority;
+
+        case RankingCriteria.CATEGORY:
+            // Sort by Category Name AZ, then Priority
+            const catCompare = a.category.localeCompare(b.category);
+            if (catCompare !== 0) return catCompare;
+            return b.priority - a.priority;
+
+        default:
+          return b.createdAt - a.createdAt;
+      }
+    });
+  }, [tasks, activeCategory, rankingMethod]);
+
+  // Top 2 tasks to focus on
+  const topTasks = sortedTasks.slice(0, 2);
+  const backupTasks = sortedTasks.slice(2);
+
+  // Handlers
+  const handleAddTask = (taskData: Omit<Task, 'id' | 'createdAt' | 'completedAt'>) => {
+    const newTask: Task = {
+      ...taskData,
+      id: uuidv4(),
+      createdAt: Date.now(),
+    };
+    setTasks(prev => [...prev, newTask]);
+    
+    if (activeCategory !== 'All' && taskData.category !== activeCategory) {
+        setActiveCategory('All');
+    }
+  };
+
+  const handleEditTask = (taskData: Omit<Task, 'id' | 'createdAt' | 'completedAt'>) => {
+    if (!editingTask) return;
+    
+    setTasks(prev => prev.map(t => 
+        t.id === editingTask.id 
+            ? { ...t, ...taskData } 
+            : t
+    ));
+    setEditingTask(null);
+  };
+
+  const handleCompleteTask = (id: string) => {
+    const taskToComplete = tasks.find(t => t.id === id);
+    if (taskToComplete) {
+      const completed: Task = { ...taskToComplete, completedAt: Date.now() };
+      setCompletedTasks(prev => [...prev, completed]);
+      setTasks(prev => prev.filter(t => t.id !== id));
+    }
+  };
+
+  const handleRestoreTask = (id: string) => {
+    const taskToRestore = completedTasks.find(t => t.id === id);
+    if (taskToRestore) {
+        // Remove from completed
+        setCompletedTasks(prev => prev.filter(t => t.id !== id));
+        
+        // Remove completedAt timestamp and add back to active tasks
+        const restoredTask = { ...taskToRestore };
+        delete restoredTask.completedAt;
+        
+        setTasks(prev => [...prev, restoredTask]);
+    }
+  };
+
+  const handleDeleteTask = (id: string) => {
+    // Exactly like handleCompleteTask: find it, then remove it from tasks.
+    // We simply skip the step of adding it to 'completedTasks'.
+    // Removed window.confirm to ensure immediate execution like Cross Out.
+    const taskToDelete = tasks.find(t => t.id === id);
+    
+    if (taskToDelete) {
+        setTasks(prev => prev.filter(t => t.id !== id));
+        
+        // If the task being deleted is the one currently being edited in the modal, close the modal
+        if (editingTask && editingTask.id === id) {
+            setIsTaskModalOpen(false);
+            setEditingTask(null);
+        }
+    }
+  };
+
+  const handleOpenEdit = (task: Task) => {
+    setEditingTask(task);
+    setIsTaskModalOpen(true);
+  };
+
+  const handleClearHistory = () => {
+      // Direct execution, no confirmation, mirroring the delete function behavior
+      setCompletedTasks([]);
+  };
+
+  return (
+    <div className="min-h-screen pb-20 px-4 md:px-8 max-w-5xl mx-auto pt-8">
+      
+      {/* Header */}
+      <header className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+        <div>
+           <h1 className="text-4xl md:text-5xl font-black text-black tracking-tight mb-2 relative inline-block">
+             FOCUS TASKS
+             <div className="absolute -bottom-2 left-0 w-full h-3 bg-memphis-yellow -z-10 opacity-70 transform -rotate-1"></div>
+           </h1>
+           <p className="text-gray-600 font-medium">Get it done. Two at a time.</p>
+        </div>
+        
+        <div className="flex gap-3">
+            <Button onClick={() => setIsHistoryModalOpen(true)} variant="secondary" className="flex items-center gap-2">
+                <History size={18} /> History ({completedTasks.length})
+            </Button>
+            <Button onClick={() => { setEditingTask(null); setIsTaskModalOpen(true); }} className="flex items-center gap-2">
+                <Plus size={20} strokeWidth={3} /> Add Task
+            </Button>
+        </div>
+      </header>
+
+      {/* Controls */}
+      {categories.length > 0 && (
+          <CategoryFilter 
+            categories={categories} 
+            activeCategory={activeCategory} 
+            onSelectCategory={setActiveCategory} 
+          />
+      )}
+      
+      <RankingSelector 
+        currentRanking={rankingMethod} 
+        onRankingChange={setRankingMethod} 
+      />
+
+      {/* Main Focus Area */}
+      {sortedTasks.length === 0 ? (
+        <div className="text-center py-20 bg-white border-2 border-black border-dashed rounded-lg">
+          <h3 className="text-2xl font-bold text-gray-400 mb-2">No tasks found!</h3>
+          <p className="text-gray-500 mb-6">You're either extremely productive or procrastinating.</p>
+          <Button onClick={() => setIsTaskModalOpen(true)}>Create First Task</Button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+            {/* Top Task 1 */}
+            {topTasks[0] && (
+                <div className="relative">
+                     <div className="absolute -top-4 -left-4 bg-black text-white px-3 py-1 font-bold text-sm transform -rotate-3 z-10 shadow-[4px_4px_0px_0px_rgba(255,144,232,1)]">
+                        FOCUS #1
+                     </div>
+                     <TaskCard 
+                        task={topTasks[0]} 
+                        onComplete={handleCompleteTask} 
+                        onEdit={handleOpenEdit} 
+                        onDelete={handleDeleteTask}
+                        isTopTask={true} 
+                     />
+                </div>
+            )}
+            
+            {/* Top Task 2 */}
+            {topTasks[1] && (
+                <div className="relative">
+                     <div className="absolute -top-4 -left-4 bg-black text-white px-3 py-1 font-bold text-sm transform rotate-2 z-10 shadow-[4px_4px_0px_0px_rgba(35,166,213,1)]">
+                        FOCUS #2
+                     </div>
+                     <TaskCard 
+                        task={topTasks[1]} 
+                        onComplete={handleCompleteTask} 
+                        onEdit={handleOpenEdit} 
+                        onDelete={handleDeleteTask}
+                        isTopTask={true} 
+                     />
+                </div>
+            )}
+        </div>
+      )}
+
+      {/* Backup List */}
+      {backupTasks.length > 0 && (
+        <div className="mt-12">
+            <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
+                Up Next ({backupTasks.length})
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 opacity-75">
+                {backupTasks.map(task => (
+                    <TaskCard 
+                        key={task.id} 
+                        task={task} 
+                        onComplete={handleCompleteTask} 
+                        onEdit={handleOpenEdit} 
+                        onDelete={handleDeleteTask}
+                        isTopTask={false} 
+                    />
+                ))}
+            </div>
+        </div>
+      )}
+
+      {/* Modals */}
+      <TaskModal 
+        isOpen={isTaskModalOpen} 
+        onClose={() => { setIsTaskModalOpen(false); setEditingTask(null); }}
+        onSave={editingTask ? handleEditTask : handleAddTask}
+        onDelete={handleDeleteTask}
+        initialTask={editingTask}
+      />
+
+      <HistoryModal 
+        isOpen={isHistoryModalOpen}
+        onClose={() => setIsHistoryModalOpen(false)}
+        completedTasks={completedTasks}
+        onClearHistory={handleClearHistory}
+        onRestore={handleRestoreTask}
+      />
+    </div>
+  );
+}

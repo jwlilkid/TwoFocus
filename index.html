@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Memphis Focus Tasks</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Space Grotesk', 'sans-serif'],
+            },
+            colors: {
+              memphis: {
+                pink: '#ff90e8',
+                yellow: '#ffc900',
+                blue: '#23a6d5',
+                mint: '#90e0ef',
+                purple: '#b185db',
+                black: '#1a1a1a',
+                paper: '#ffffff',
+              }
+            },
+            boxShadow: {
+              'memphis': '4px 4px 0px 0px #1a1a1a',
+              'memphis-hover': '6px 6px 0px 0px #1a1a1a',
+              'memphis-active': '2px 2px 0px 0px #1a1a1a',
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+      body {
+        background-color: #f0f4f8;
+        background-image: radial-gradient(#23a6d5 1px, transparent 1px);
+        background-size: 20px 20px;
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "lucide-react": "https://esm.sh/lucide-react@^0.563.0",
+    "react/": "https://esm.sh/react@^19.2.4/",
+    "react": "https://esm.sh/react@^19.2.4",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+    "uuid": "https://esm.sh/uuid@^13.0.0",
+    "date-fns": "https://esm.sh/date-fns@^4.1.0"
+  }
+}
+</script>
+</head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
