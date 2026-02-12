@@ -28,7 +28,7 @@ export const CategoryFilter: React.FC<CategoryFilterProps> = ({
           variant={activeCategory === cat ? 'primary' : 'secondary'}
           onClick={() => onSelectCategory(cat)}
           size="sm"
-          className={activeCategory === cat ? "ring-2 ring-black" : ""}
+          className={activeCategory === cat ? "ring-2 ring-black dark:ring-white" : ""}
         >
           {cat}
         </Button>

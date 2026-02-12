@@ -19,9 +19,9 @@ export const RankingSelector: React.FC<RankingSelectorProps> = ({
   ];
 
   return (
-    <div className="bg-white border-2 border-black shadow-memphis p-4 mb-6">
+    <div className="bg-white dark:bg-memphis-dark-surface border-2 border-black dark:border-white shadow-memphis mb-6 p-4 transition-colors">
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-        <span className="font-bold text-lg flex items-center gap-2">
+        <span className="font-bold text-lg flex items-center gap-2 text-black dark:text-white">
            Sort Tasks By:
         </span>
         <div className="flex flex-wrap gap-2">
@@ -30,10 +30,10 @@ export const RankingSelector: React.FC<RankingSelectorProps> = ({
               key={option.id}
               onClick={() => onRankingChange(option.id)}
               className={`
-                flex items-center gap-2 px-3 py-2 border-2 border-black font-medium text-sm transition-all
+                flex items-center gap-2 px-3 py-2 border-2 border-black dark:border-white font-medium text-sm transition-all
                 ${currentRanking === option.id 
-                  ? 'bg-memphis-pink shadow-[2px_2px_0px_0px_#1a1a1a] translate-x-[-1px] translate-y-[-1px]' 
-                  : 'bg-white hover:bg-gray-50'
+                  ? 'bg-memphis-pink dark:bg-pink-700 text-black dark:text-white shadow-[2px_2px_0px_0px_#1a1a1a] dark:shadow-[2px_2px_0px_0px_var(--memphis-shadow)] translate-x-[-1px] translate-y-[-1px]' 
+                  : 'bg-white dark:bg-black text-black dark:text-white hover:bg-gray-50 dark:hover:bg-gray-900'
                 }
               `}
             >

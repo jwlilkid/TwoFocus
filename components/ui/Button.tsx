@@ -12,11 +12,12 @@ export const Button: React.FC<ButtonProps> = ({
   className = '', 
   ...props 
 }) => {
-  const baseStyles = "font-bold border-2 border-black transition-all transform active:translate-x-[2px] active:translate-y-[2px] active:shadow-memphis-active disabled:opacity-50 disabled:cursor-not-allowed";
+  // Use border-black in light mode, border-white in dark mode
+  const baseStyles = "font-bold border-2 border-black dark:border-white transition-all transform active:translate-x-[2px] active:translate-y-[2px] active:shadow-memphis-active disabled:opacity-50 disabled:cursor-not-allowed";
   
   const variants = {
     primary: "bg-memphis-yellow text-black shadow-memphis hover:-translate-y-0.5 hover:shadow-memphis-hover",
-    secondary: "bg-white text-black shadow-memphis hover:-translate-y-0.5 hover:shadow-memphis-hover",
+    secondary: "bg-white dark:bg-memphis-dark-surface text-black dark:text-white shadow-memphis hover:-translate-y-0.5 hover:shadow-memphis-hover",
     danger: "bg-red-400 text-white shadow-memphis hover:-translate-y-0.5 hover:shadow-memphis-hover",
     success: "bg-memphis-mint text-black shadow-memphis hover:-translate-y-0.5 hover:shadow-memphis-hover",
   };

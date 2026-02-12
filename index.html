@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
     <script>
       tailwind.config = {
+        darkMode: 'class',
         theme: {
           extend: {
             fontFamily: {
@@ -22,21 +23,73 @@
                 purple: '#b185db',
                 black: '#1a1a1a',
                 paper: '#ffffff',
+                dark: '#121212',
+                'dark-surface': '#1e1e1e',
               }
             },
             boxShadow: {
-              'memphis': '4px 4px 0px 0px #1a1a1a',
-              'memphis-hover': '6px 6px 0px 0px #1a1a1a',
-              'memphis-active': '2px 2px 0px 0px #1a1a1a',
+              'memphis': '4px 4px 0px 0px var(--memphis-shadow)',
+              'memphis-hover': '6px 6px 0px 0px var(--memphis-shadow)',
+              'memphis-active': '2px 2px 0px 0px var(--memphis-shadow)',
             }
           }
         }
       }
     </script>
     <style>
-      body {
-        background-color: #f0f4f8;
-        background-image: radial-gradient(#23a6d5 1px, transparent 1px);
+      :root {
+        --memphis-shadow: #1a1a1a;
+      }
+      
+      .dark {
+        --memphis-shadow: #90e0ef; /* Neon Mint shadow for dark mode */
+      }
+
+      /* Custom Scrollbar */
+      ::-webkit-scrollbar {
+        width: 10px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #1a1a1a;
+        border-radius: 5px;
+        border: 2px solid rgba(0,0,0,0.1);
+      }
+      .dark ::-webkit-scrollbar-thumb {
+        background: #90e0ef;
+        border: 2px solid #121212;
+      }
+
+      /* Background Patterns */
+      .bg-memphis-light {
+        background-color: #fff9f0; /* Warm white */
+        background-image: 
+          radial-gradient(#23a6d5 2px, transparent 2px), 
+          radial-gradient(#ffc900 2px, transparent 2px);
+        background-size: 40px 40px;
+        background-position: 0 0, 20px 20px;
+        /* Subtle large shapes */
+        position: relative;
+      }
+      .bg-memphis-light::before {
+        content: "";
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background-image: 
+          linear-gradient(45deg, rgba(255, 144, 232, 0.05) 25%, transparent 25%, transparent 75%, rgba(255, 144, 232, 0.05) 75%, rgba(255, 144, 232, 0.05)),
+          linear-gradient(45deg, rgba(255, 144, 232, 0.05) 25%, transparent 25%, transparent 75%, rgba(255, 144, 232, 0.05) 75%, rgba(255, 144, 232, 0.05));
+        background-size: 60px 60px;
+        background-position: 0 0, 30px 30px;
+        pointer-events: none;
+        z-index: -1;
+      }
+
+      .bg-memphis-dark {
+        background-color: #121212;
+        background-image: 
+          radial-gradient(#333 1.5px, transparent 1.5px);
         background-size: 20px 20px;
       }
     </style>

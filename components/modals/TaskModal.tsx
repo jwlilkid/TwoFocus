@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Task, DEFAULT_COLORS } from '../../types';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
-import { X, AlertCircle, Brain, Zap, Trash2 } from 'lucide-react';
+import { X, AlertCircle, Brain, Zap, Trash2, Tag } from 'lucide-react';
 
 interface TaskModalProps {
   isOpen: boolean;
@@ -10,9 +10,21 @@ interface TaskModalProps {
   onSave: (task: Omit<Task, 'id' | 'createdAt' | 'completedAt'>) => void;
   onDelete?: (id: string) => void;
   initialTask?: Task | null;
+  existingCategories?: string[];
+  categoryColors?: Record<string, string>;
+  defaultCategory?: string;
 }
 
-export const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, onSave, onDelete, initialTask }) => {
+export const TaskModal: React.FC<TaskModalProps> = ({ 
+  isOpen, 
+  onClose, 
+  onSave, 
+  onDelete, 
+  initialTask,
+  existingCategories = [],
+  categoryColors = {},
+  defaultCategory = ''
+}) => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   
@@ -48,19 +60,29 @@ export const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, onSave, o
             setDeadlineTime('');
         }
       } else {
-        // Defaults
+        // Defaults for new task
         setTitle('');
         setDescription('');
         setPriority(5);
         setBotheredLevel(5);
         setDifficultyLevel(5);
-        setCategory('');
-        setTagColor(DEFAULT_COLORS[Math.floor(Math.random() * DEFAULT_COLORS.length)]);
+        
+        // Auto-fill category from memory
+        const startCategory = defaultCategory;
+        setCategory(startCategory);
+        
+        // Auto-fill color if category exists
+        if (startCategory && categoryColors[startCategory]) {
+            setTagColor(categoryColors[startCategory]);
+        } else {
+            setTagColor(DEFAULT_COLORS[Math.floor(Math.random() * DEFAULT_COLORS.length)]);
+        }
+
         setDeadlineDate('');
         setDeadlineTime('');
       }
     }
-  }, [isOpen, initialTask]);
+  }, [isOpen, initialTask, defaultCategory, categoryColors]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -93,6 +115,13 @@ export const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, onSave, o
     }
   };
 
+  const handleCategorySelect = (cat: string) => {
+      setCategory(cat);
+      if (categoryColors[cat]) {
+          setTagColor(categoryColors[cat]);
+      }
+  };
+
   if (!isOpen) return null;
 
   const renderSlider = (
@@ -104,12 +133,12 @@ export const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, onSave, o
     highLabel: string,
     colorClass: string
   ) => (
-    <div className="bg-gray-50 p-3 border-2 border-black/10 rounded-sm">
+    <div className="bg-gray-50 dark:bg-white/5 p-3 border-2 border-black/10 dark:border-white/20 rounded-sm">
       <div className="flex justify-between items-center mb-2">
-         <label className="font-bold text-sm flex items-center gap-2">
+         <label className="font-bold text-sm flex items-center gap-2 dark:text-white">
             {icon} {label}
          </label>
-         <span className={`font-black text-lg ${colorClass} bg-white border-2 border-black px-2 py-0.5 min-w-[3rem] text-center`}>
+         <span className={`font-black text-lg ${colorClass} bg-white dark:bg-black border-2 border-black dark:border-white px-2 py-0.5 min-w-[3rem] text-center`}>
             {value}
          </span>
       </div>
@@ -121,7 +150,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, onSave, o
             max="10" 
             value={value} 
             onChange={e => setValue(Number(e.target.value))} 
-            className="w-full h-3 bg-white rounded-lg appearance-none cursor-pointer border-2 border-black accent-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.1)]"
+            className="w-full h-3 bg-white rounded-lg appearance-none cursor-pointer border-2 border-black accent-black dark:accent-white shadow-[2px_2px_0px_0px_rgba(0,0,0,0.1)]"
          />
          <span className="text-xs font-bold text-gray-400 uppercase">{highLabel}</span>
       </div>
@@ -130,10 +159,10 @@ export const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, onSave, o
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="bg-white border-2 border-black shadow-[8px_8px_0px_0px_rgba(255,144,232,1)] w-full max-w-lg max-h-[90vh] overflow-y-auto">
-        <div className="p-4 border-b-2 border-black flex justify-between items-center bg-memphis-yellow">
-          <h2 className="text-xl font-bold">{initialTask ? 'Edit Task' : 'New Task'}</h2>
-          <button onClick={onClose} className="p-1 hover:bg-black/10 rounded"><X size={24} /></button>
+      <div className="bg-white dark:bg-memphis-dark-surface border-2 border-black dark:border-white shadow-[8px_8px_0px_0px_rgba(255,144,232,1)] dark:shadow-[8px_8px_0px_0px_var(--memphis-shadow)] w-full max-w-lg max-h-[90vh] overflow-y-auto transition-colors">
+        <div className="p-4 border-b-2 border-black dark:border-white flex justify-between items-center bg-memphis-yellow dark:bg-yellow-600">
+          <h2 className="text-xl font-bold text-black dark:text-white">{initialTask ? 'Edit Task' : 'New Task'}</h2>
+          <button onClick={onClose} className="p-1 hover:bg-black/10 rounded dark:text-white dark:hover:bg-white/20"><X size={24} /></button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
@@ -147,9 +176,9 @@ export const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, onSave, o
           />
 
           <div className="flex flex-col gap-1">
-            <label className="font-bold text-sm">Description</label>
+            <label className="font-bold text-sm dark:text-white">Description</label>
             <textarea 
-              className="border-2 border-black p-2 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] focus:outline-none focus:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] w-full resize-none h-20"
+              className="border-2 border-black dark:border-white p-2 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_var(--memphis-shadow)] focus:outline-none focus:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:focus:shadow-[4px_4px_0px_0px_var(--memphis-shadow)] w-full resize-none h-20 bg-white dark:bg-memphis-dark-surface dark:text-white"
               value={description}
               onChange={e => setDescription(e.target.value)}
               placeholder="Add details..."
@@ -163,8 +192,8 @@ export const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, onSave, o
           </div>
 
           {/* Tag & Color System */}
-          <div className="border-2 border-black p-4 bg-gray-50 relative mt-6">
-             <label className="absolute -top-3 left-3 bg-gray-50 px-2 font-bold text-sm">Category & Tag</label>
+          <div className="border-2 border-black dark:border-white p-4 bg-gray-50 dark:bg-white/5 relative mt-6">
+             <label className="absolute -top-3 left-3 bg-gray-50 dark:bg-memphis-dark-surface dark:text-white border dark:border-white px-2 font-bold text-sm">Category & Tag</label>
              <div className="flex gap-4 items-end">
                 <div className="flex-1">
                     <Input 
@@ -175,14 +204,35 @@ export const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, onSave, o
                         list="existing-categories"
                         required
                     />
+                    <datalist id="existing-categories">
+                        {existingCategories.map(cat => <option key={cat} value={cat} />)}
+                    </datalist>
+
+                    {/* Quick Select Chips */}
+                    {existingCategories.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mt-2">
+                            {existingCategories.slice(0, 6).map(cat => (
+                                <button
+                                    key={cat}
+                                    type="button"
+                                    onClick={() => handleCategorySelect(cat)}
+                                    className="text-xs font-bold px-2 py-1 rounded-sm border border-black dark:border-white hover:opacity-80 transition-transform active:scale-95 text-black shadow-[1px_1px_0px_0px_rgba(0,0,0,0.5)]"
+                                    style={{ backgroundColor: categoryColors[cat] || '#fff' }}
+                                    title="Quick select category"
+                                >
+                                    {cat}
+                                </button>
+                            ))}
+                        </div>
+                    )}
                 </div>
                 <div className="flex flex-col gap-1">
-                    <label className="text-xs font-bold">Color</label>
+                    <label className="text-xs font-bold dark:text-white">Color</label>
                     <input 
                         type="color" 
                         value={tagColor} 
                         onChange={e => setTagColor(e.target.value)}
-                        className="h-[42px] w-[50px] border-2 border-black p-0 cursor-pointer"
+                        className="h-[42px] w-[50px] border-2 border-black dark:border-white p-0 cursor-pointer"
                     />
                 </div>
              </div>
@@ -194,7 +244,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, onSave, o
                         key={c}
                         type="button"
                         onClick={() => setTagColor(c)}
-                        className={`w-6 h-6 rounded-full border border-black ${tagColor === c ? 'ring-2 ring-offset-1 ring-black scale-110' : ''}`}
+                        className={`w-6 h-6 rounded-full border border-black dark:border-white ${tagColor === c ? 'ring-2 ring-offset-1 ring-black dark:ring-white scale-110' : ''}`}
                         style={{ backgroundColor: c }}
                     />
                 ))}
