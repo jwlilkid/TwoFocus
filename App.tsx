@@ -207,7 +207,7 @@ export default function App() {
       <header className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
         <div>
            <h1 className="text-4xl md:text-5xl font-black text-black tracking-tight mb-2 relative inline-block">
-             FOCUS TASKS
+             FocusTwo
              <div className="absolute -bottom-2 left-0 w-full h-3 bg-memphis-yellow -z-10 opacity-70 transform -rotate-1"></div>
            </h1>
            <p className="text-gray-600 font-medium">Get it done. Two at a time.</p>
