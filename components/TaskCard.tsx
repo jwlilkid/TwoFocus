@@ -22,9 +22,9 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, onComplete, onEdit, on
   // Dynamic background based on priority (0-10)
   const getBgColor = () => {
     if (!isTopTask) return 'bg-white dark:bg-memphis-dark-surface'; 
-    if (task.priority >= 8) return 'bg-red-100 dark:bg-red-900/40';
-    if (task.priority >= 5) return 'bg-memphis-yellow dark:bg-yellow-600/80';
-    return 'bg-memphis-mint dark:bg-cyan-900/60';
+    if (task.priority >= 8) return 'bg-memphis-pink dark:bg-memphis-pink';
+    if (task.priority >= 5) return 'bg-memphis-yellow dark:bg-memphis-yellow';
+    return 'bg-memphis-mint dark:bg-memphis-mint';
   };
 
   // Touch Handlers
@@ -75,7 +75,8 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, onComplete, onEdit, on
 
   // Text color logic
   const getTextColor = () => {
-      return 'text-black dark:text-white';
+      if (!isTopTask) return 'text-black dark:text-white';
+      return 'text-black dark:text-black';
   };
 
   return (
@@ -103,11 +104,11 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, onComplete, onEdit, on
       {/* Foreground Card */}
       <div 
         className={`
-          relative border-2 border-black dark:border-white transition-transform group
-          ${isTopTask ? 'shadow-memphis' : 'shadow-sm dark:shadow-none opacity-80'}
+          relative border-2 transition-transform group
+          ${isTopTask ? 'border-black dark:border-black shadow-memphis' : 'border-black dark:border-white shadow-sm dark:shadow-none opacity-80'}
           ${getBgColor()}
           ${getTextColor()}
-          ${isExpanded ? 'p-5' : 'p-3'}
+          ${isExpanded ? (isTopTask ? 'p-6 md:p-8' : 'p-5') : (isTopTask ? 'p-5 md:p-6' : 'p-3')}
         `}
         style={{ 
             transform: `translateX(${swipeOffset}px)`,
@@ -120,7 +121,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, onComplete, onEdit, on
       >
         {/* Category Tag Badge */}
         <div 
-          className={`absolute -top-3 -right-3 px-3 py-1 border-2 border-black dark:border-white text-black dark:text-white text-xs font-bold shadow-[2px_2px_0px_0px_#000] dark:shadow-[2px_2px_0px_0px_var(--memphis-shadow)] z-20 pointer-events-none transition-transform origin-bottom-left ${isExpanded ? 'scale-100' : 'scale-90'}`}
+          className={`absolute -top-3 -right-3 px-3 py-1 border-2 text-xs font-bold shadow-[2px_2px_0px_0px_#000] z-20 pointer-events-none transition-transform origin-bottom-left ${isExpanded ? 'scale-100' : 'scale-90'} ${isTopTask ? 'border-black dark:border-black text-black dark:text-black dark:shadow-[2px_2px_0px_0px_#000]' : 'border-black dark:border-white text-black dark:text-white dark:shadow-[2px_2px_0px_0px_var(--memphis-shadow)]'}`}
           style={{ backgroundColor: task.tagColor }}
         >
           {task.category}
@@ -131,7 +132,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, onComplete, onEdit, on
           
           {/* Title (Clickable to Toggle) */}
           <h3 
-              className={`font-bold leading-tight flex-1 pr-2 break-words cursor-pointer transition-all ${isExpanded ? 'text-xl' : 'text-lg line-clamp-1'}`}
+              className={`font-bold leading-tight flex-1 pr-2 break-words cursor-pointer transition-all ${isExpanded ? (isTopTask ? 'text-2xl md:text-3xl' : 'text-xl') : (isTopTask ? 'text-xl md:text-2xl line-clamp-2' : 'text-lg line-clamp-1')}`}
               onClick={() => { 
                   if (swipeOffset === 0) setIsExpanded(!isExpanded); 
                   else resetSwipe(); // If expanded swipe, close swipe first
@@ -144,16 +145,16 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, onComplete, onEdit, on
           {/* Controls */}
           <div className="flex items-center gap-3 shrink-0">
               {/* Tiny Icons Group */}
-              <div className="flex gap-1 bg-white dark:bg-black border-2 border-black dark:border-white p-0.5 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.1)]">
+              <div className={`flex gap-1 border-2 p-0.5 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.1)] ${isTopTask ? 'bg-white dark:bg-white border-black dark:border-black' : 'bg-white dark:bg-black border-black dark:border-white'}`}>
                   <button 
                     onClick={(e) => { e.stopPropagation(); onEdit(task); }}
-                    className="p-1 hover:bg-black dark:hover:bg-white text-black dark:text-white dark:hover:text-black hover:text-white transition-colors flex items-center justify-center"
+                    className={`p-1 transition-colors flex items-center justify-center ${isTopTask ? 'hover:bg-black text-black hover:text-white dark:hover:bg-black dark:text-black dark:hover:text-white' : 'hover:bg-black dark:hover:bg-white text-black dark:text-white dark:hover:text-black hover:text-white'}`}
                     title="Edit Task"
                     type="button"
                   >
                     <Edit2 size={14} />
                   </button>
-                  <div className="w-[1px] bg-black/10 dark:bg-white/20 mx-0.5"></div>
+                  <div className={`w-[1px] mx-0.5 ${isTopTask ? 'bg-black/20 dark:bg-black/20' : 'bg-black/10 dark:bg-white/20'}`}></div>
                   <button 
                     onClick={(e) => { e.stopPropagation(); onDelete(task.id); }}
                     className="p-1 hover:bg-red-600 text-red-600 hover:text-white transition-colors flex items-center justify-center"
@@ -166,7 +167,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, onComplete, onEdit, on
                   {/* Cross Out Button - Only for Top Tasks */}
                   {isTopTask && (
                       <>
-                          <div className="w-[1px] bg-black/10 dark:bg-white/20 mx-0.5"></div>
+                          <div className="w-[1px] bg-black/20 dark:bg-black/20 mx-0.5"></div>
                           <button 
                               onClick={(e) => { e.stopPropagation(); onComplete(task.id); }}
                               className="p-1 hover:bg-memphis-mint text-green-600 hover:text-black transition-colors flex items-center justify-center"
@@ -186,7 +187,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, onComplete, onEdit, on
                       if (swipeOffset === 0) setIsExpanded(!isExpanded);
                       else resetSwipe();
                   }}
-                  className="w-8 h-8 flex items-center justify-center bg-black dark:bg-white text-white dark:text-black border-2 border-transparent hover:scale-110 transition-transform rounded-full shadow-sm"
+                  className={`w-8 h-8 flex items-center justify-center border-2 border-transparent hover:scale-110 transition-transform rounded-full shadow-sm ${isTopTask ? 'bg-black dark:bg-black text-white dark:text-white' : 'bg-black dark:bg-white text-white dark:text-black'}`}
                   title={isExpanded ? "Roll up" : "Expand"}
               >
                   {isExpanded ? <ChevronUp size={20} strokeWidth={3} /> : <ChevronDown size={20} strokeWidth={3} />}
@@ -196,34 +197,34 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, onComplete, onEdit, on
         
         {/* Expanded Content: Hidden by default */}
         {isExpanded && (
-          <div className="mt-4 pt-4 border-t-2 border-black/10 dark:border-white/10 animate-in fade-in slide-in-from-top-1 duration-200">
+          <div className={`mt-4 pt-4 border-t-2 animate-in fade-in slide-in-from-top-1 duration-200 ${isTopTask ? 'border-black/20 dark:border-black/20' : 'border-black/10 dark:border-white/10'}`}>
               {task.description && (
-                  <p className="text-sm text-gray-700 dark:text-gray-300 mb-4 break-words relative z-10">{task.description}</p>
+                  <p className={`text-sm mb-4 break-words relative z-10 ${isTopTask ? 'text-gray-800 dark:text-gray-800' : 'text-gray-700 dark:text-gray-300'}`}>{task.description}</p>
               )}
 
               {/* Metadata Grid */}
-              <div className="grid grid-cols-2 gap-2 text-xs font-medium mb-4 relative z-10 text-gray-800 dark:text-gray-200">
+              <div className={`grid grid-cols-2 gap-2 text-xs font-medium mb-4 relative z-10 ${isTopTask ? 'text-gray-900 dark:text-gray-900' : 'text-gray-800 dark:text-gray-200'}`}>
                   <div className="flex items-center gap-1.5" title="Deadline">
-                  <Calendar size={14} className="text-memphis-purple dark:text-purple-300" />
+                  <Calendar size={14} className={isTopTask ? 'text-memphis-purple dark:text-memphis-purple' : 'text-memphis-purple dark:text-purple-300'} />
                   {task.deadline ? (
-                      <span className={new Date(task.deadline) < new Date() ? 'text-red-600 dark:text-red-400 font-bold' : ''}>
+                      <span className={new Date(task.deadline) < new Date() ? 'text-red-600 dark:text-red-600 font-bold' : ''}>
                       {format(new Date(task.deadline), 'MMM d, h:mm a')}
                       </span>
-                  ) : <span className="text-gray-400 dark:text-gray-500">No Deadline</span>}
+                  ) : <span className={isTopTask ? 'text-gray-600 dark:text-gray-600' : 'text-gray-400 dark:text-gray-500'}>No Deadline</span>}
                   </div>
                   
                   <div className="flex items-center gap-1.5" title="Difficulty Level">
-                  <Brain size={14} className="text-memphis-blue dark:text-blue-300" />
+                  <Brain size={14} className={isTopTask ? 'text-memphis-blue dark:text-memphis-blue' : 'text-memphis-blue dark:text-blue-300'} />
                   Diff: {task.difficultyLevel}/10
                   </div>
 
                   <div className="flex items-center gap-1.5" title="Priority Level">
-                  <AlertCircle size={14} className={task.priority >= 7 ? 'text-red-500 dark:text-red-400' : 'text-gray-600 dark:text-gray-400'} />
+                  <AlertCircle size={14} className={task.priority >= 7 ? 'text-red-600 dark:text-red-600' : (isTopTask ? 'text-gray-700 dark:text-gray-700' : 'text-gray-600 dark:text-gray-400')} />
                   Prio: {task.priority}/10
                   </div>
 
                   <div className="flex items-center gap-1.5" title="Bother Level">
-                  <Zap size={14} className="text-yellow-600 dark:text-yellow-400" />
+                  <Zap size={14} className={isTopTask ? 'text-yellow-700 dark:text-yellow-700' : 'text-yellow-600 dark:text-yellow-400'} />
                   Bother: {task.botheredLevel}/10
                   </div>
               </div>
@@ -232,7 +233,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, onComplete, onEdit, on
               {isTopTask ? (
                   <button 
                   onClick={(e) => { e.stopPropagation(); onComplete(task.id); }}
-                  className="w-full flex items-center justify-center gap-2 bg-black dark:bg-white text-white dark:text-black font-bold py-3 hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors border-2 border-transparent active:border-white dark:active:border-black relative z-20 cursor-pointer shadow-[2px_2px_0px_0px_rgba(0,0,0,0.2)]"
+                  className="w-full flex items-center justify-center gap-2 bg-black dark:bg-black text-white dark:text-white font-bold py-3 hover:bg-gray-800 dark:hover:bg-gray-800 transition-colors border-2 border-transparent active:border-white dark:active:border-white relative z-20 cursor-pointer shadow-[2px_2px_0px_0px_rgba(0,0,0,0.2)]"
                   >
                   <Check size={20} />
                   CROSS OUT

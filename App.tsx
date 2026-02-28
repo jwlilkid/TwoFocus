@@ -311,21 +311,20 @@ export default function App() {
         {/* Backup List */}
         {backupTasks.length > 0 && (
           <div className="mt-12">
-              <button 
-                onClick={() => setIsBackupExpanded(!isBackupExpanded)}
-                className="w-full group flex items-center justify-between p-4 bg-white dark:bg-memphis-dark-surface border-2 border-black dark:border-white shadow-memphis hover:shadow-memphis-hover active:shadow-memphis-active transition-all mb-6"
-              >
-                  <div className="flex items-center gap-3">
-                      <div className={`w-4 h-4 rounded-full transition-colors ${isBackupExpanded ? 'bg-memphis-pink' : 'bg-gray-400'}`}></div>
-                      <h3 className="text-xl font-bold text-black dark:text-white">
+              <div className="flex justify-center mb-8">
+                  <button 
+                    onClick={() => setIsBackupExpanded(!isBackupExpanded)}
+                    className="group flex items-center gap-3 px-6 py-2 bg-white dark:bg-memphis-dark-surface border-2 border-black dark:border-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_var(--memphis-shadow)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[2px_2px_0px_0px_var(--memphis-shadow)] transition-all rounded-full"
+                  >
+                      <div className={`w-3 h-3 rounded-full transition-colors ${isBackupExpanded ? 'bg-memphis-pink' : 'bg-gray-400'}`}></div>
+                      <span className="font-bold text-black dark:text-white uppercase tracking-wider text-sm">
                           Up Next ({backupTasks.length})
-                      </h3>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                      {isBackupExpanded ? 'Hide' : 'Show'}
-                      {isBackupExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-                  </div>
-              </button>
+                      </span>
+                      <div className="text-gray-500 dark:text-gray-400">
+                          {isBackupExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                      </div>
+                  </button>
+              </div>
 
               {isBackupExpanded && (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-in fade-in slide-in-from-top-4 duration-300">
