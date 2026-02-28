@@ -1,5 +1,5 @@
 {
-  "name": "FocusTwo",
+  "name": "TwoFocus",
   "description": "A focused, Memphis-design task manager that displays only the top 2 tasks, featuring dynamic category filtering, multiple ranking systems, and persistence.",
   "requestFramePermissions": []
 }

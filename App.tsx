@@ -7,7 +7,7 @@ import { RankingSelector } from './components/RankingSelector';
 import { TaskCard } from './components/TaskCard';
 import { TaskModal } from './components/modals/TaskModal';
 import { HistoryModal } from './components/modals/HistoryModal';
-import { Plus, History, Sun, Moon } from 'lucide-react';
+import { Plus, History, Sun, Moon, ChevronDown, ChevronUp } from 'lucide-react';
 
 // Migration helper
 const migrateTask = (t: any): Task => {
@@ -82,6 +82,7 @@ export default function App() {
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  const [isBackupExpanded, setIsBackupExpanded] = useState(false);
 
   // Apply Theme Effect
   useEffect(() => {
@@ -226,7 +227,7 @@ export default function App() {
         <header className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
           <div>
             <h1 className="text-4xl md:text-5xl font-black text-black dark:text-white tracking-tight mb-2 relative inline-block transition-colors">
-              FocusTwo
+              TwoFocus
               <div className="absolute -bottom-2 left-0 w-full h-3 bg-memphis-yellow -z-10 opacity-70 transform -rotate-1"></div>
             </h1>
             <p className="text-gray-600 dark:text-gray-400 font-medium transition-colors">Get it done. Two at a time.</p>
@@ -310,22 +311,36 @@ export default function App() {
         {/* Backup List */}
         {backupTasks.length > 0 && (
           <div className="mt-12">
-              <h3 className="text-xl font-bold mb-4 flex items-center gap-2 text-black dark:text-white transition-colors">
-                  <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
-                  Up Next ({backupTasks.length})
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 opacity-75">
-                  {backupTasks.map(task => (
-                      <TaskCard 
-                          key={task.id} 
-                          task={task} 
-                          onComplete={handleCompleteTask} 
-                          onEdit={handleOpenEdit} 
-                          onDelete={handleDeleteTask}
-                          isTopTask={false} 
-                      />
-                  ))}
-              </div>
+              <button 
+                onClick={() => setIsBackupExpanded(!isBackupExpanded)}
+                className="w-full group flex items-center justify-between p-4 bg-white dark:bg-memphis-dark-surface border-2 border-black dark:border-white shadow-memphis hover:shadow-memphis-hover active:shadow-memphis-active transition-all mb-6"
+              >
+                  <div className="flex items-center gap-3">
+                      <div className={`w-4 h-4 rounded-full transition-colors ${isBackupExpanded ? 'bg-memphis-pink' : 'bg-gray-400'}`}></div>
+                      <h3 className="text-xl font-bold text-black dark:text-white">
+                          Up Next ({backupTasks.length})
+                      </h3>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                      {isBackupExpanded ? 'Hide' : 'Show'}
+                      {isBackupExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                  </div>
+              </button>
+
+              {isBackupExpanded && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-in fade-in slide-in-from-top-4 duration-300">
+                    {backupTasks.map(task => (
+                        <TaskCard 
+                            key={task.id} 
+                            task={task} 
+                            onComplete={handleCompleteTask} 
+                            onEdit={handleOpenEdit} 
+                            onDelete={handleDeleteTask}
+                            isTopTask={false} 
+                        />
+                    ))}
+                </div>
+              )}
           </div>
         )}
 
